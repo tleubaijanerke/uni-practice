@@ -1,2 +1,2 @@
-#PP2
-Python Programming Language
+# Uni Practice
+Описание твоего проекта здесь
