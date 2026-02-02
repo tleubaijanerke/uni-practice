@@ -1,2 +1,2 @@
-# Uni Practice
-Описание твоего проекта здесь
+# **uni-practice**
+## University programming practice
