@@ -1,2 +1,2 @@
-# **uni-practice**
-#University programming practice
+# **PP2**
+#Python programming practice
