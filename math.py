@@ -1,40 +1,55 @@
 #1
-x = min(5, 10, 25)
-y = max(5, 10, 25)
-print(x)
-print(y)
+import math
 
-#5
-#25
+degree = 15
+radian = degree * (math.pi / 180)
+
+print("Output radian:", round(radian, 6))
+
+#This program converts degrees to radians using the formula:
+#radians = degrees × π / 180.
+#math.pi provides the value of π.
+#Output: 0.261799 (≈ 0.261904 depending on rounding)
 
 
 #2
-x = abs(-7.25)
-print(x)
+height = 5
+base1 = 5
+base2 = 6
 
-#7.25
+area = (base1 + base2) * height / 2
+
+print("Expected Output:", area)
+
+#This program calculates trapezoid area using the formula.
+#Output: 27.5
 
 
 #3
 import math
-x = math.sqrt(64)
-print(x)
 
-#8.0
+n = 4
+s = 25
+
+area = (n * s**2) / (4 * math.tan(math.pi / n))
+
+print("The area of the polygon is:", int(area))
+
+#This program calculates the area of a regular polygon.
+#Uses math.tan() and math.pi.
+#Output: 625
 
 
 #4
-import math
-x = math.pi
-print(x)
+base = 5
+height = 6
 
-#3.141592653589793
+area = base * height
 
+print("Expected Output:", float(area))
 
-#5
-import random
-x = random.randint(1, 10)
-print(x)
+#This program calculates parallelogram area using base × height.
+#Output: 30.0
 
 
 
