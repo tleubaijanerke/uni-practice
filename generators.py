@@ -1,93 +1,74 @@
 #1 
-mytuple = ("apple", "banana", "cherry")
-myit = iter(mytuple)
+def square_generator(n):
+    for i in range(n + 1):
+        yield i * i
 
-print(next(myit))
-print(next(myit))
-print(next(myit))
+# Test
+for value in square_generator(5):
+    print(value)
 
-#apple
-#banana
-#cherry
+#This generator yields the square of numbers from 0 to n.
+#yield returns values one by one instead of storing them in memory.
+#Output: 0 1 4 9 16 25
 
 
 #2
-mytuple = ("apple", "banana", "cherry")
+def even_numbers(n):
+    for i in range(n + 1):
+        if i % 2 == 0:
+            yield i
 
-for x in mytuple:
-  print(x)
+n = int(input("Enter n: "))
 
-#apple
-#banana
-#cherry
+print(",".join(str(num) for num in even_numbers(n)))
+
+#This generator yields even numbers between 0 and n.
+#Numbers are converted to string and printed comma-separated.
+#Output example (n=10): 0,2,4,6,8,10
 
 
 #3
-mystr = "banana"
+def divisible_by_3_and_4(n):
+    for i in range(n + 1):
+        if i % 3 == 0 and i % 4 == 0:
+            yield i
 
-for x in mystr:
-  print(x)
+# Test
+for num in divisible_by_3_and_4(50):
+    print(num)
 
-#b
-#a
-#n
-#a
-#n
-#a
+#This generator yields numbers divisible by both 3 and 4 between 0 and n.
+#Condition: i % 3 == 0 and i % 4 == 0.
+#Output example: 0, 12, 24, 36, 48
 
 
 #4
-class MyNumbers:
-  def __iter__(self):
-    self.a = 1
-    return self
+def squares(a, b):
+    for i in range(a, b + 1):
+        yield i * i
 
-  def __next__(self):
-    if self.a <= 5:
-      x = self.a
-      self.a += 1
-      return x
-    else:
-      raise StopIteration
-
-myclass = MyNumbers()
-myiter = iter(myclass)
-
-for x in myiter:
-  print(x)
-
-#1
-#2
-#3
-#4
-#5
+# Test
+for value in squares(3, 7):
+    print(value)
+  
+#This generator yields squares of numbers from a to b inclusive.
+#Values are produced one at a time using yield.
+#Output: 9 16 25 36 49
 
 
 #5
-class MyNumbers:
-  def __iter__(self):
-    self.a = 1
-    return self
+def countdown(n):
+    while n >= 0:
+        yield n
+        n -= 1
 
-  def __next__(self):
-    x = self.a
-    self.a += 1
-    return x
+# Test
+for num in countdown(5):
+    print(num)
 
-myclass = MyNumbers()
-myiter = iter(myclass)
-
-print(next(myiter))
-print(next(myiter))
-print(next(myiter))
-print(next(myiter))
-print(next(myiter))
-
-#1
-#2
-#3
-#4
-#5
+#This generator yields numbers from n down to 0.
+#Each iteration decreases n by 1.
+#Output: 5 4 3 2 1
 
 
 # Generators and Iterators in Python
