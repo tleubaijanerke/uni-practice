@@ -1,2 +1,2 @@
 # **PP2**
-#Python programming practice
+#Python programming language
