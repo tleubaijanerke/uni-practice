@@ -1,65 +1,48 @@
 import re
 import json
+import os
 
-# Read the receipt file
-with open("raw.txt", "r", encoding="utf-8") as f:
-    text = f.read()
+# open raw.txt from the same folder
+path = os.path.join(os.path.dirname(__file__), "raw.txt")
 
-# convert money string to float (e.g., "1 200,00" -> 1200.00)
-def money_to_float(s: str) -> float:
-    return float(s.replace(" ", "").replace(",", "."))
+with open(path, "r", encoding="utf-8") as file:
+    text = file.read()
 
-# 1) Extract all prices using regex pattern for Kazakhstani format
-money_pattern = r"\d{1,3}(?: \d{3})*,\d{2}"
-all_prices = re.findall(money_pattern, text)
+# find product names (lines starting with number)
+products = re.findall(r"\d+\.\n(.+)", text)
 
-# 2-3) Extract items with named groups: name, quantity, unit price, line total
-item_pattern = (
-    r"(?ms)^\d+\.\s*\n"                       # item number + newline
-    r"(?P<name>.+?)\n"                         # product name (lazy)
-    r"(?P<qty>\d+,\d{3})\s*x\s*"                # quantity (e.g., 2,000 x)
-    r"(?P<unit>\d{1,3}(?: \d{3})*,\d{2})\n"     # unit price
-    r"(?P<line>\d{1,3}(?: \d{3})*,\d{2})"       # line total
-)
+# find prices
+prices = re.findall(r"\n(\d{1,3}(?: \d{3})*,\d{2})\nСтоимость", text)
 
-items = []
-for m in re.finditer(item_pattern, text):
-    d = m.groupdict()
-    items.append({
-        "name": d["name"].strip(),
-        "qty": float(d["qty"].replace(",", ".")),         
-        "unit_price": money_to_float(d["unit"]),
-        "line_total": money_to_float(d["line"]),
-    })
+# convert prices to numbers
+item_costs = [float(p.replace(" ", "").replace(",", ".")) for p in prices]
 
-# List of just product names
-product_names = [it["name"] for it in items]
+# calculate total
+calculated_total = sum(item_costs)
 
-# 4) Extract total amount after "ИТОГО:"
-total_m = re.search(r"(?m)^ИТОГО:\s*\n(?P<total>\d{1,3}(?: \d{3})*,\d{2})$", text)
-total = money_to_float(total_m.group("total")) if total_m else None
+# find official total
+official_total = re.search(r"ИТОГО:\n([\d ]+,\d{2})", text)
+if official_total:
+    official_total = float(official_total.group(1).replace(" ", "").replace(",", "."))
 
-# 5) Extract date and time
-dt_m = re.search(r"Время:\s*(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2}:\d{2})", text)
-datetime = {"date": dt_m.group(1), "time": dt_m.group(2)} if dt_m else None
+# find date and time
+datetime = re.search(r"Время: ([\d\.]+\s[\d:]+)", text)
+if datetime:
+    datetime = datetime.group(1)
 
-# 6) Extract payment method
-pay_m = re.search(r"(?m)^(Банковская карта|Наличные|Карта):", text, flags=re.IGNORECASE)
-payment_method = pay_m.group(1) if pay_m else None
+# find payment method
+payment = re.search(r"(Банковская карта)", text)
+if payment:
+    payment = payment.group(1)
 
-# Optional verification: sum line totals and compare with total
-calc_sum = round(sum(it["line_total"] for it in items), 2)
-
-# Compile all extracted data into final dictionary
+# output result
 result = {
-    "product_names": product_names,
-    "items": items,
-    "all_prices_raw": all_prices,
-    "total": total,
-    "total_calculated_from_items": calc_sum,
+    "products": products,
+    "item_costs": item_costs,
+    "calculated_total": calculated_total,
+    "official_total": official_total,
     "datetime": datetime,
-    "payment_method": payment_method,
+    "payment_method": payment
 }
 
-# Output as formatted JSON
-print(json.dumps(result, ensure_ascii=False, indent=2))
+print(json.dumps(result, indent=4, ensure_ascii=False))
