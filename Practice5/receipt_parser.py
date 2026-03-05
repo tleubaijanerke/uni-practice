@@ -1,73 +1,65 @@
 import re
 import json
 
-with open("raw.txt", "r", encoding="utf-8") as file:
-    data = file.read()
+# Read the receipt file
+with open("raw.txt", "r", encoding="utf-8") as f:
+    text = f.read()
 
-# 1. Extract all prices from the receipt
-# \d{1,3}        → 1–3 digits
-# (?:\s\d{3})*   → optional groups like " 200"
-# ,\d{2}         → comma + 2 digits (decimal part)
-price_pattern = r"\d{1,3}(?:\s\d{3})*,\d{2}"
-prices_raw = re.findall(price_pattern, data)
+# convert money string to float (e.g., "1 200,00" -> 1200.00)
+def money_to_float(s: str) -> float:
+    return float(s.replace(" ", "").replace(",", "."))
 
-prices = [float(p.replace(" ", "").replace(",", ".")) for p in prices_raw]
+# 1) Extract all prices using regex pattern for Kazakhstani format
+money_pattern = r"\d{1,3}(?: \d{3})*,\d{2}"
+all_prices = re.findall(money_pattern, text)
 
+# 2-3) Extract items with named groups: name, quantity, unit price, line total
+item_pattern = (
+    r"(?ms)^\d+\.\s*\n"                       # item number + newline
+    r"(?P<name>.+?)\n"                         # product name (lazy)
+    r"(?P<qty>\d+,\d{3})\s*x\s*"                # quantity (e.g., 2,000 x)
+    r"(?P<unit>\d{1,3}(?: \d{3})*,\d{2})\n"     # unit price
+    r"(?P<line>\d{1,3}(?: \d{3})*,\d{2})"       # line total
+)
 
-# 2. Find all product names
-# \d+\.          → item number like "1."
-# \n             → next line
-# (.+)           → product name line
-
-product_pattern = r"\d+\.\n(.+)"
-products = re.findall(product_pattern, data)
-
-
-# 3. Calculate total amount
-# We take the value after "ИТОГО:"
-
-total_pattern = r"ИТОГО:\n([\d\s]+,\d{2})"
-total_match = re.search(total_pattern, data)
-
-if total_match:
-    total = float(total_match.group(1).replace(" ", "").replace(",", "."))
-else:
-    total = sum(prices)  # fallback calculation
-
-
-# 4. Extract date and time information
-# dd.mm.yyyy hh:mm:ss
-
-datetime_pattern = r"\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2}:\d{2}"
-datetime_match = re.search(datetime_pattern, data)
-
-datetime_value = datetime_match.group() if datetime_match else None
-
-
-# 5. Find payment method
-# In this receipt it says:
-# "Банковская карта:"
-payment_pattern = r"Банковская карта|Наличные"
-payment_match = re.search(payment_pattern, data)
-
-payment_method = payment_match.group() if payment_match else "Unknown"
-
-
-# 6. Create structured output
 items = []
+for m in re.finditer(item_pattern, text):
+    d = m.groupdict()
+    items.append({
+        "name": d["name"].strip(),
+        "qty": float(d["qty"].replace(",", ".")),         
+        "unit_price": money_to_float(d["unit"]),
+        "line_total": money_to_float(d["line"]),
+    })
 
-for i in range(len(products)):
-    if i < len(prices):
-        items.append({
-            "name": products[i],
-            "price": prices[i]
-        })
+# List of just product names
+product_names = [it["name"] for it in items]
 
-receipt_data = {
-    "date_time": datetime_value,
-    "payment_method": payment_method,
+# 4) Extract total amount after "ИТОГО:"
+total_m = re.search(r"(?m)^ИТОГО:\s*\n(?P<total>\d{1,3}(?: \d{3})*,\d{2})$", text)
+total = money_to_float(total_m.group("total")) if total_m else None
+
+# 5) Extract date and time
+dt_m = re.search(r"Время:\s*(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2}:\d{2})", text)
+datetime = {"date": dt_m.group(1), "time": dt_m.group(2)} if dt_m else None
+
+# 6) Extract payment method
+pay_m = re.search(r"(?m)^(Банковская карта|Наличные|Карта):", text, flags=re.IGNORECASE)
+payment_method = pay_m.group(1) if pay_m else None
+
+# Optional verification: sum line totals and compare with total
+calc_sum = round(sum(it["line_total"] for it in items), 2)
+
+# Compile all extracted data into final dictionary
+result = {
+    "product_names": product_names,
     "items": items,
-    "total": total
+    "all_prices_raw": all_prices,
+    "total": total,
+    "total_calculated_from_items": calc_sum,
+    "datetime": datetime,
+    "payment_method": payment_method,
 }
 
-print(json.dumps(receipt_data, indent=4, ensure_ascii=False))
+# Output as formatted JSON
+print(json.dumps(result, ensure_ascii=False, indent=2))
