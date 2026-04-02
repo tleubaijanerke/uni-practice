@@ -7,6 +7,7 @@ print("1 - Search")
 print("2 - Add/Update contact")
 print("3 - Delete contact")
 print("4 - Show contacts (pagination)")
+print("5 - Add multiple contacts")  # new option
 
 choice = input("Choose option: ")
 
@@ -39,6 +40,20 @@ elif choice == "4":
     rows = cur.fetchall()
     for row in rows:
         print(row)
+
+# BULK INSERT (procedure)
+elif choice == "5":
+    # enter multiple contacts separated by commas
+    names = input("Enter names separated by commas: ").split(",")
+    phones = input("Enter phones separated by commas: ").split(",")
+    
+    # remove extra spaces
+    names = [n.strip() for n in names]
+    phones = [p.strip() for p in phones]
+    
+    # call the bulk insert procedure
+    cur.execute("CALL bulk_insert_contacts(%s, %s)", (names, phones))
+    print("Bulk insert done. Check console for invalid phones.")
 
 else:
     print("Invalid choice")
