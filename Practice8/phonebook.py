@@ -7,7 +7,7 @@ print("1 - Search")
 print("2 - Add/Update contact")
 print("3 - Delete contact")
 print("4 - Show contacts (pagination)")
-print("5 - Add multiple contacts")  # new option
+print("5 - Add multiple contacts")  
 
 choice = input("Choose option: ")
 
