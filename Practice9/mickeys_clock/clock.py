@@ -7,10 +7,22 @@ class MickeyClock:
         self.center = (width // 2, height // 2)
 
         base = os.path.dirname(__file__)
-        path = os.path.join(base, "images", "mickey_hand.png")
+        img_path = os.path.join(base, "images")
 
-        self.hand = pygame.image.load(path)  # БЕЗ convert_alpha (безопаснее)
-        self.hand = pygame.transform.scale(self.hand, (200, 200))
+        self.clock_img = pygame.image.load(os.path.join(img_path, "clock.png")).convert_alpha()
+        self.mickey_img = pygame.image.load(os.path.join(img_path, "mUmrP.png")).convert_alpha()
+
+        self.left_arm = pygame.image.load(os.path.join(img_path, "hand_left.png")).convert_alpha()
+        self.right_arm = pygame.image.load(os.path.join(img_path, "hand_right.png")).convert_alpha()
+
+        self.clock_img = pygame.transform.scale(self.clock_img, (800, 600))
+        self.mickey_img = pygame.transform.scale(self.mickey_img, (300, 300))
+
+        self.left_arm = pygame.transform.scale(self.left_arm, (160, 160))
+        self.right_arm = pygame.transform.scale(self.right_arm, (160, 160))
+
+        self.left_shoulder = (self.center[0] - 70, self.center[1] - 30)
+        self.right_shoulder = (self.center[0] + 40, self.center[1] - 0)
 
         self.min_angle = 0
         self.sec_angle = 0
@@ -24,14 +36,16 @@ class MickeyClock:
         self.min_angle = -minutes * 6
         self.sec_angle = -seconds * 6
 
-    def rotate(self, img, angle):
-        rotated = pygame.transform.rotate(img, angle)
-        rect = rotated.get_rect(center=self.center)
-        return rotated, rect
+    def draw_arm(self, screen, image, angle, pivot):
+        rotated = pygame.transform.rotate(image, angle)
+        rect = rotated.get_rect(center=pivot)
+        screen.blit(rotated, rect)
 
     def draw(self, screen):
-        sec_img, sec_rect = self.rotate(self.hand, self.sec_angle)
-        screen.blit(sec_img, sec_rect)
+        screen.blit(self.clock_img, (self.center[0] - 400, self.center[1] - 300))
 
-        min_img, min_rect = self.rotate(self.hand, self.min_angle)
-        screen.blit(min_img, min_rect)
+        screen.blit(self.mickey_img, self.mickey_img.get_rect(center=self.center))
+
+        self.draw_arm(screen, self.right_arm, self.sec_angle, self.right_shoulder)
+
+        self.draw_arm(screen, self.left_arm, self.min_angle, self.left_shoulder)
